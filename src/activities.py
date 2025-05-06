@@ -139,9 +139,12 @@ class Activities:
         )
 
     def completeActivity(self, activity: dict) -> None:
+        tabResetRequired = False
         try:
             activityTitle = cleanupActivityTitle(activity["title"])
             logging.debug(f"activityTitle={activityTitle}")
+
+            tabResetRequired = False
             if activity["complete"] or activity["pointProgressMax"] == 0:
                 logging.debug("Already done, returning")
                 return
@@ -149,15 +152,18 @@ class Activities:
                 logging.debug("Activity locked, returning")
                 if activityTitle not in ACTIVITY_TITLES_TO_QUERIES:
                     logging.warning(
-                        f"Add activity title '{activityTitle}' to search mapping in relevant language file in localized_activities")
+                        f"Add activity title '{activityTitle}' to search mapping in relevant language file in localized_activities"
+                    )
                 return
             if activityTitle in IGNORED_ACTIVITIES:
                 logging.debug(f"Ignoring {activityTitle}")
                 return
             # Open the activity for the activity
             if "puzzle" in activityTitle.lower():
-                logging.info(f"Skipping {activityTitle} because it's not supported")
-                return
+                # logging.info(f"Skipping {activityTitle} because it's not supported")
+                logging.info("Just click the puzzle and do nothing to see if it works")
+                pass
+                # return
             if "Windows search" == activityTitle:
                 # for search in {"what time is it in dublin", "what is the weather"}:
                 #     pyautogui.press("win")
@@ -168,6 +174,8 @@ class Activities:
                 #     sleep(5)
                 # pyautogui.hotkey("alt", "f4") # Close Edge
                 return
+
+            tabResetRequired = True
             activityElement = self.browser.utils.waitUntilClickable(
                 By.XPATH, f'//*[contains(text(), "{activity["title"]}")]', timeToWait=20
             )
@@ -206,7 +214,8 @@ class Activities:
             logging.debug(f"activity={activity}")
             return
         finally:
-            self.browser.utils.resetTabs()
+            if tabResetRequired:
+                self.browser.utils.resetTabs()
         cooldown()
 
     def completeActivities(self):
