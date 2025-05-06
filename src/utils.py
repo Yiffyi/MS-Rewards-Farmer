@@ -706,6 +706,9 @@ def makeRequestsSession(session: T = requests.session()) -> T:
     session.mount(
         "http://", HTTPAdapter(max_retries=retry)
     )  # See https://stackoverflow.com/a/35504626/4164390 to finetune
+    session.proxies.update(
+        {"http": CONFIG.browser.proxy, "https": CONFIG.browser.proxy}
+    )
     return session
 
 
