@@ -24,6 +24,7 @@ class Login:
     """
     Class to handle login to MS Rewards.
     """
+
     browser: Browser
     webdriver: Chrome
 
@@ -86,7 +87,26 @@ class Login:
 
     def execute_login(self) -> None:
         # Email field
-        emailField = self.utils.waitUntilVisible(By.ID, "i0116")
+        try:
+            emailField = self.utils.waitUntilVisible(By.ID, "i0116")
+        except TimeoutException:
+            # ID: usernameEntry
+            logging.error(
+                "[LOGIN] Email form field not found, possibly due to new login UX."
+            )
+
+            assert (
+                CONFIG.browser.visible
+            ), "You must have a visible browser to deal with new login UX."
+
+            print(
+                "You must proceed to login manually, and press Enter when you are redirected to the Rewards Portal."
+            )
+            input()
+            self.utils.waitUntilVisible(
+                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]'
+            )
+            return
         logging.info("[LOGIN] Entering email...")
         emailField.click()
         emailField.send_keys(self.browser.email)
