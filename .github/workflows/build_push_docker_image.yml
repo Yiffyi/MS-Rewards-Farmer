@@ -1,37 +1,50 @@
 name: Build and Push Docker Image
 
+permissions:
+  packages: write
+
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:
-  build:
+  push_to_registry:
+    name: Push Docker image to GHCR
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Check out the repo
         uses: actions/checkout@v4
-      - name: Docker meta
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          registry: "ghcr.io"
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/ms-rewards
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+          images: ghcr.io/yiffyi/xfbbroker
+          tags: |
+            type=raw,value=latest
+            type=ref,event=branch
+
+      # - name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
