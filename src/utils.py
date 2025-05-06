@@ -336,6 +336,10 @@ class Utils:
 
     def tryDismissAllMessages(self) -> None:
         byValues = [
+            (
+                By.XPATH,
+                '//div[@id="cookieConsentContainer"]//button[contains(text(), "Accept")]',
+            ),
             (By.ID, "iLandingViewAction"),
             (By.ID, "iShowSkip"),
             (By.ID, "iNext"),
@@ -347,13 +351,17 @@ class Utils:
         ]
         for byValue in byValues:
             dismissButtons = []
-            with contextlib.suppress(NoSuchElementException):
+            with contextlib.suppress(
+                NoSuchElementException, ElementNotInteractableException
+            ):
                 dismissButtons = self.webdriver.find_elements(
                     by=byValue[0], value=byValue[1]
                 )
             for dismissButton in dismissButtons:
                 dismissButton.click()
-        with contextlib.suppress(NoSuchElementException):
+        with contextlib.suppress(
+            NoSuchElementException, ElementNotInteractableException
+        ):
             self.webdriver.find_element(By.ID, "cookie-banner").find_element(
                 By.TAG_NAME, "button"
             ).click()
@@ -833,8 +841,11 @@ def load_localized_activities(language: str) -> ModuleType:
         search_module = importlib.import_module(f"localized_activities.{language}")
         return search_module
     except ModuleNotFoundError:
-        logging.warning(f"No search queries found for language: {language}, defaulting to English (en)")
+        logging.warning(
+            f"No search queries found for language: {language}, defaulting to English (en)"
+        )
         return importlib.import_module("localized_activities.en")
+
 
 CONFIG = loadConfig()
 APPRISE = initApprise()
