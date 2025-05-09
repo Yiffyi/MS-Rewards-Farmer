@@ -151,48 +151,58 @@ def executeBot(currentAccount):
     goalPoints: int
 
     if CONFIG.search.type in ("desktop", "both", None):
-        with Browser(mobile=False, account=currentAccount) as desktopBrowser:
-            utils = desktopBrowser.utils
-            Login(desktopBrowser).login()
-            startingPoints = utils.getAccountPoints()
-            logging.info(
-                f"[POINTS] You have {formatNumber(startingPoints)} points on your account"
+        try:
+            with Browser(mobile=False, account=currentAccount) as desktopBrowser:
+                utils = desktopBrowser.utils
+                Login(desktopBrowser).login()
+                startingPoints = utils.getAccountPoints()
+                logging.info(
+                    f"[POINTS] You have {formatNumber(startingPoints)} points on your account"
+                )
+                Activities(desktopBrowser).completeActivities()
+                PunchCards(desktopBrowser).completePunchCards()
+                # VersusGame(desktopBrowser).completeVersusGame()
+
+                with CNSearches(desktopBrowser) as searches:
+                    searches.bingSearches()
+
+                accountPoints = utils.getAccountPoints()
+                goalPoints = utils.getGoalPoints()
+                goalTitle = utils.getGoalTitle()
+
+                remainingSearches = desktopBrowser.getRemainingSearches(
+                    desktopAndMobile=True
+                )
+        except Exception as e:
+            logging.exception(
+                f"[ERROR] Failed to complete desktop searches", exc_info=True
             )
-            Activities(desktopBrowser).completeActivities()
-            PunchCards(desktopBrowser).completePunchCards()
-            # VersusGame(desktopBrowser).completeVersusGame()
-
-            with CNSearches(desktopBrowser) as searches:
-                searches.bingSearches()
-
-            goalPoints = utils.getGoalPoints()
-            goalTitle = utils.getGoalTitle()
-
-            remainingSearches = desktopBrowser.getRemainingSearches(
-                desktopAndMobile=True
-            )
-            accountPoints = utils.getAccountPoints()
 
     if CONFIG.search.type in ("mobile", "both", None):
-        with Browser(mobile=True, account=currentAccount) as mobileBrowser:
-            utils = mobileBrowser.utils
-            Login(mobileBrowser).login()
-            if startingPoints is None:
-                startingPoints = utils.getAccountPoints()
-            try:
-                ReadToEarn(mobileBrowser).completeReadToEarn()
-            except Exception:
-                logging.exception("[READ TO EARN] Failed to complete Read to Earn")
-            with Searches(mobileBrowser) as searches:
-                searches.bingSearches()
+        try:
+            with Browser(mobile=True, account=currentAccount) as mobileBrowser:
+                utils = mobileBrowser.utils
+                Login(mobileBrowser).login()
+                if startingPoints is None:
+                    startingPoints = utils.getAccountPoints()
+                try:
+                    ReadToEarn(mobileBrowser).completeReadToEarn()
+                except Exception:
+                    logging.exception("[READ TO EARN] Failed to complete Read to Earn")
+                with Searches(mobileBrowser) as searches:
+                    searches.bingSearches()
 
-            goalPoints = utils.getGoalPoints()
-            goalTitle = utils.getGoalTitle()
+                accountPoints = utils.getAccountPoints()
+                goalPoints = utils.getGoalPoints()
+                goalTitle = utils.getGoalTitle()
 
-            remainingSearches = mobileBrowser.getRemainingSearches(
-                desktopAndMobile=True
+                remainingSearches = mobileBrowser.getRemainingSearches(
+                    desktopAndMobile=True
+                )
+        except Exception as e:
+            logging.exception(
+                f"[ERROR] Failed to complete desktop searches", exc_info=True
             )
-            accountPoints = utils.getAccountPoints()
 
     logging.info(
         f"[POINTS] You have earned {formatNumber(accountPoints - startingPoints)} points this run !"
