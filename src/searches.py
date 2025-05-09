@@ -10,7 +10,8 @@ from selenium.webdriver.common.by import By
 from trendspy import Trends
 
 from src.browser import Browser
-from src.utils import CONFIG, getProjectRoot, cooldown, COUNTRY
+from src.utils import CONFIG, getProjectRoot, cooldown, COUNTRY, makeRequestsSession
+import requests
 
 
 class RetriesStrategy(Enum):
@@ -26,6 +27,117 @@ class RetriesStrategy(Enum):
     """
     the default; a constant `backoff-factor` between attempts
     """
+
+
+class CNSearches:
+    """
+    Class to handle CN specific trending searches in MS Rewards.
+    """
+
+    maxRetries: Final[int] = CONFIG.retries.max
+    """
+    the max amount of retries to attempt
+    """
+
+    trendingItems: list
+
+    def __init__(self, browser: Browser):
+        self.browser = browser
+        self.webdriver = browser.webdriver
+
+    def __enter__(self):
+        logging.debug("[CNSearches] __enter__")
+        response = makeRequestsSession().get(
+            "https://cn.bing.com/hp/api/v1/carousel?=&format=json&ecount=24&efirst=0&FORM=BEHPTB&setlang=zh-Hans"
+        )
+        if response.status_code != requests.codes.ok:
+            raise requests.HTTPError(
+                f"Failed to fetch cn.bing.com search trending. "
+                f"Status code: {response.status_code}"
+            )
+        j = response.json()
+        assert j["statusCode"] == 200
+        data = j["data"][0]
+        assert data["typeName"] == "TrendingNow"
+        # "items": [
+        #     {
+        #         "title": "结婚离婚不用户口本",
+        #         "url": "/search?q=%e7%bb%93%e5%a9%9a%e7%a6%bb%e5%a9%9a%e4%b8%8d%e7%94%a8%e6%88%b7%e5%8f%a3%e6%9c%ac&efirst=0&ecount=50&filters=tnTID%3a%22DSBOS_1AFDFAD0F5EF45FB865544E58DB7F801%22+tnVersion%3a%2243b28438849f4902ad7261f596293f27%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%220%22+tnOrder%3a%227ee05f48-63ce-4b78-9daf-9b74bc689784%22&form=HPNN01",
+        #         "imageUrl": "/th?id=OVFT.AOt2tw9kmOZX0rHrXp-n0y&w=186&h=88&c=7&rs=2&qlt=80&pid=PopNow",
+        #         "badge": null,
+        #         "imageCredit": "",
+        #         "tooltip": "结婚离婚不用户口本",
+        #         "linksTarget": "",
+        #         "dataTags": null,
+        #         "additionalMetaData": null,
+        #         "shortTitle": "",
+        #         "longTitle": "",
+        #         "tag": "Hot"
+        #     },
+        # ]
+        import random
+
+        self.trendingItems = data["items"]
+        random.shuffle(self.trendingItems)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        logging.debug("[CNSearches] __exit__")
+
+    def bingSearches(self) -> None:
+        # Function to perform Bing searches
+        logging.info(
+            f"[BING] Starting {self.browser.browserType.capitalize()} Edge Bing searches..."
+        )
+
+        self.browser.utils.goToSearch()
+
+        for trend in self.trendingItems:
+            desktopAndMobileRemaining = self.browser.getRemainingSearches(
+                desktopAndMobile=True
+            )
+            logging.info(f"[BING] Remaining searches={desktopAndMobileRemaining}")
+            if (
+                self.browser.browserType == "desktop"
+                and desktopAndMobileRemaining.desktop == 0
+            ) or (
+                self.browser.browserType == "mobile"
+                and desktopAndMobileRemaining.mobile == 0
+            ):
+                break
+
+            self.bingSearch(trend)
+            sleep(randint(10, 15))
+
+        logging.info(
+            f"[BING] Finished {self.browser.browserType.capitalize()} Edge Bing searches !"
+        )
+
+    def bingSearch(self, trendingItem) -> None:
+        # Function to perform a single Bing search
+        pointsBefore = self.browser.utils.getAccountPoints()
+
+        logging.debug(f"trendingItem={trendingItem}")
+        logging.debug(f"trendKeywords={trendingItem["title"]}")
+        from urllib.parse import urljoin
+
+        for i in range(self.maxRetries + 1):
+
+            self.webdriver.get(urljoin("https://cn.bing.com/", trendingItem["url"]))
+            cooldown()
+
+            pointsAfter = self.browser.utils.getAccountPoints()
+            if pointsBefore < pointsAfter:
+                return
+
+            logging.debug(
+                f"[BING] Search attempt not counted {i}/{Searches.maxRetries}, before={pointsBefore}, after={pointsAfter}"
+            )
+            # todo
+            # if i == (maxRetries / 2):
+            #     logging.info("[BING] " + "TIMED OUT GETTING NEW PROXY")
+            #     self.webdriver.proxy = self.browser.giveMeProxy()
+        logging.error("[BING] Reached max search attempt retries")
 
 
 class Searches:

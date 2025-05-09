@@ -12,6 +12,7 @@ from src import (
     Login,
     PunchCards,
     Searches,
+    CNSearches,
     ReadToEarn,
 )
 from src.activities import Activities
@@ -103,13 +104,15 @@ def setupLogging():
         backupCount=2,
         encoding="utf-8",
     )
-    fileHandler.namer = lambda name: name.replace('.log.', '-') + '.log'
+    fileHandler.namer = lambda name: name.replace(".log.", "-") + ".log"
     fileHandler.setLevel(logging.DEBUG)
 
-    logging.config.dictConfig({
+    logging.config.dictConfig(
+        {
             "version": 1,
             "disable_existing_loggers": True,
-    })
+        }
+    )
 
     logging.basicConfig(
         level=logging.DEBUG,
@@ -159,7 +162,7 @@ def executeBot(currentAccount):
             PunchCards(desktopBrowser).completePunchCards()
             # VersusGame(desktopBrowser).completeVersusGame()
 
-            with Searches(desktopBrowser) as searches:
+            with CNSearches(desktopBrowser) as searches:
                 searches.bingSearches()
 
             goalPoints = utils.getGoalPoints()
@@ -250,7 +253,8 @@ def export_points_to_csv(points_data):
 def load_previous_points_data():
     try:
         with open(
-                getProjectRoot() / "logs" / "previous_points_data.json", encoding='utf-8') as file:
+            getProjectRoot() / "logs" / "previous_points_data.json", encoding="utf-8"
+        ) as file:
             return json.load(file)
     except FileNotFoundError:
         return {}
@@ -259,7 +263,9 @@ def load_previous_points_data():
 # Define a function to save the current day's points data for the next day in the "logs" folder
 def save_previous_points_data(data):
     logs_directory = getProjectRoot() / "logs"
-    with open(logs_directory / "previous_points_data.json", "w", encoding="utf-8") as file:
+    with open(
+        logs_directory / "previous_points_data.json", "w", encoding="utf-8"
+    ) as file:
         json.dump(data, file, indent=4)
 
 
