@@ -18,7 +18,9 @@ from src.utils import (
     getBrowserConfig,
     getProjectRoot,
     saveBrowserConfig,
-    PREFER_BING_INFO, LANGUAGE, COUNTRY,
+    PREFER_BING_INFO,
+    LANGUAGE,
+    COUNTRY,
 )
 
 
@@ -167,26 +169,26 @@ class Browser:
                 },
             )
 
-        driver.execute_cdp_cmd(
-            "Emulation.setDeviceMetricsOverride",
-            {
-                "width": deviceWidth,
-                "height": deviceHeight,
-                "deviceScaleFactor": 0,
-                "mobile": self.mobile,
-                "screenWidth": screenWidth,
-                "screenHeight": screenHeight,
-                "positionX": 0,
-                "positionY": 0,
-                "viewport": {
-                    "x": 0,
-                    "y": 0,
+            driver.execute_cdp_cmd(
+                "Emulation.setDeviceMetricsOverride",
+                {
                     "width": deviceWidth,
                     "height": deviceHeight,
-                    "scale": 1,
+                    "deviceScaleFactor": 0,
+                    "mobile": self.mobile,
+                    "screenWidth": screenWidth,
+                    "screenHeight": screenHeight,
+                    "positionX": 0,
+                    "positionY": 0,
+                    "viewport": {
+                        "x": 0,
+                        "y": 0,
+                        "width": deviceWidth,
+                        "height": deviceHeight,
+                        "scale": 1,
+                    },
                 },
-            },
-        )
+            )
 
         driver.execute_cdp_cmd(
             "Emulation.setUserAgentOverride",
