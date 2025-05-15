@@ -167,8 +167,8 @@ def executeBot(currentAccount):
                     searches.bingSearches()
 
                 accountPoints = utils.getAccountPoints()
-                goalPoints = utils.getGoalPoints()
-                goalTitle = utils.getGoalTitle()
+                # goalPoints = utils.getGoalPoints()
+                # goalTitle = utils.getGoalTitle()
 
                 remainingSearches = desktopBrowser.getRemainingSearches(
                     desktopAndMobile=True
@@ -189,12 +189,12 @@ def executeBot(currentAccount):
                     ReadToEarn(mobileBrowser).completeReadToEarn()
                 except Exception:
                     logging.exception("[READ TO EARN] Failed to complete Read to Earn")
-                with Searches(mobileBrowser) as searches:
+                with CNSearches(mobileBrowser) as searches:
                     searches.bingSearches()
 
                 accountPoints = utils.getAccountPoints()
-                goalPoints = utils.getGoalPoints()
-                goalTitle = utils.getGoalTitle()
+                # goalPoints = utils.getGoalPoints()
+                # goalTitle = utils.getGoalTitle()
 
                 remainingSearches = mobileBrowser.getRemainingSearches(
                     desktopAndMobile=True
