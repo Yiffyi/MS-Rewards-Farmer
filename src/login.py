@@ -134,6 +134,11 @@ class Login:
                 )
             self.utils.waitUntilVisible(By.NAME, "kmsiForm", 60)
             logging.info("[LOGIN] Successfully verified!")
+        elif len(self.browser.password) == 0:
+            logging.info(
+                "[LOGIN] You did not specify password, you must complete the login process manually."
+            )
+            self.utils.waitUntilVisible(By.NAME, "kmsiForm", 120)
         else:
             # Password-based login, enter password from accounts.json
             passwordField = self.utils.waitUntilClickable(By.NAME, "passwd")
