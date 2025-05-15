@@ -692,12 +692,10 @@ def saveBrowserConfig(sessionPath: Path, config: dict) -> None:
         json.dump(config, f)
 
 
-from typing import TypeVar
+def makeRequestsSession(session: Session = None) -> Session:
+    if session is None:
+        session = requests.session()
 
-T = TypeVar("T", bound=Session)
-
-
-def makeRequestsSession(session: T = requests.session()) -> T:
     retry = Retry(
         total=CONFIG.retries.max,
         backoff_factor=CONFIG.get("retries.backoff-factor"),
