@@ -48,7 +48,7 @@ class CNSearches:
     def __enter__(self):
         logging.debug("[CNSearches] __enter__")
         response = makeRequestsSession().get(
-            "https://cn.bing.com/hp/api/v1/carousel?=&format=json&ecount=24&efirst=0&FORM=BEHPTB&setlang=zh-Hans"
+            "https://cn.bing.com/hp/api/v1/carousel?=&format=json&ecount=50&efirst=0&FORM=BEHPTB&setlang=zh-Hans"
         )
         if response.status_code != requests.codes.ok:
             raise requests.HTTPError(
