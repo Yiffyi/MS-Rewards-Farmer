@@ -85,6 +85,7 @@ class ReadToEarn:
         }
 
         # 10 is the most articles you can read. Sleep time is a guess, not tuned
+        pointsBefore = self.browser.utils.getAccountPoints()
         for i in range(10):
             # Replace ID with a random value so get credit for a new article
             json_data["id"] = secrets.token_hex(64)
@@ -93,6 +94,18 @@ class ReadToEarn:
                 json=json_data,
             )
             newbalance = r.json().get("response").get("balance")
+            logging.debug(f"[READ TO EARN] newbalance={newbalance}")
+            
+            pointsAfter = self.browser.utils.getAccountPoints()
+            if pointsBefore < pointsAfter:
+                logging.info(
+                    f"[READ TO EARN] gained {pointsAfter - pointsBefore}, points={pointsAfter}"
+                )
+            else:
+                logging.warning(
+                    f"[READ TO EARN] read not counted, before={pointsBefore}, after={pointsAfter}"
+                )
+            pointsBefore = pointsAfter
 
             if newbalance == balance:
                 logging.info("[READ TO EARN] Read All Available Articles !")
