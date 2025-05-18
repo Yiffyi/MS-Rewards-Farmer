@@ -263,8 +263,10 @@ class Utils:
 
     # Prefer getBingInfo if possible
     def getDashboardData(self) -> dict:
-        self.goToRewards()
-        time.sleep(5)  # fixme Avoid busy wait (if this works)
+        if self.webdriver.current_url != REWARDS_URL:
+            self.goToRewards()
+            time.sleep(5)  # fixme Avoid busy wait (if this works)
+
         return self.webdriver.execute_script("return dashboard")
 
     def getDailySetPromotions(self) -> list[dict]:
