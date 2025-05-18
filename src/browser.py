@@ -70,9 +70,11 @@ class Browser:
         logging.debug(
             f"in __exit__ exc_type={exc_type} exc_value={exc_value} traceback={traceback}"
         )
-        # turns out close is needed for undetected_chromedriver
-        self.webdriver.close()
-        self.webdriver.quit()
+        try:
+            # turns out close is needed for undetected_chromedriver
+            self.webdriver.close()
+        finally:
+            self.webdriver.quit()
 
     def browserSetup(
         self,
