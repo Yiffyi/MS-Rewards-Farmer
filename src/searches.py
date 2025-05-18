@@ -48,7 +48,7 @@ class CNSearches:
     def __enter__(self):
         logging.debug("[CNSearches] __enter__")
         response = makeRequestsSession().get(
-            "https://cn.bing.com/hp/api/v1/carousel?=&format=json&ecount=50&efirst=0&FORM=BEHPTB&setlang=zh-Hans"
+            "https://cn.bing.com/hp/api/v1/carousel?=&format=json&ecount=100&efirst=0&FORM=BEHPTB&setlang=zh-Hans"
         )
         if response.status_code != requests.codes.ok:
             raise requests.HTTPError(
@@ -107,13 +107,13 @@ class CNSearches:
                 break
 
             self.bingSearch(trend)
-            sleep(randint(10, 15))
+            # sleep(randint(10, 15))
 
         logging.info(
             f"[BING] Finished {self.browser.browserType.capitalize()} Edge Bing searches !"
         )
 
-    def bingSearch(self, trendingItem) -> None:
+    def bingSearch(self, trendingItem) -> bool:
         # Function to perform a single Bing search
         pointsBefore = self.browser.utils.getAccountPoints()
 
@@ -121,23 +121,20 @@ class CNSearches:
         logging.debug(f"trendKeywords={trendingItem["title"]}")
         from urllib.parse import urljoin
 
-        for i in range(self.maxRetries + 1):
+        self.webdriver.get(urljoin("https://cn.bing.com/", trendingItem["url"]))
+        cooldown()
 
-            self.webdriver.get(urljoin("https://cn.bing.com/", trendingItem["url"]))
-            cooldown()
-
-            pointsAfter = self.browser.utils.getAccountPoints()
-            if pointsBefore < pointsAfter:
-                return
-
-            logging.debug(
-                f"[BING] Search attempt not counted {i}/{Searches.maxRetries}, before={pointsBefore}, after={pointsAfter}"
+        pointsAfter = self.browser.utils.getAccountPoints()
+        if pointsBefore < pointsAfter:
+            logging.info(
+                f"[BING] gained {pointsAfter - pointsBefore} from search, points={pointsAfter}"
             )
-            # todo
-            # if i == (maxRetries / 2):
-            #     logging.info("[BING] " + "TIMED OUT GETTING NEW PROXY")
-            #     self.webdriver.proxy = self.browser.giveMeProxy()
-        logging.error("[BING] Reached max search attempt retries")
+            return True
+        else:
+            logging.warning(
+                f"[BING] Search attempt not counted, before={pointsBefore}, after={pointsAfter}"
+            )
+            return False
 
 
 class Searches:
