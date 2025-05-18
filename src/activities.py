@@ -220,7 +220,10 @@ class Activities:
 
     def completeActivities(self):
         logging.info("[ACTIVITIES] " + "Trying to complete all activities...")
-        for activity in self.browser.utils.getActivities():
+        activities = self.browser.utils.getActivities()
+        logging.debug(f"[ACTIVITIES] activities={activities}")
+        for idx, activity in enumerate(activities):
+            logging.debug(f"[ACTIVITIES] idx={idx}, activity={activity}")
             self.completeActivity(activity)
         logging.info("[ACTIVITIES] " + "Done")
 
